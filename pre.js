@@ -11,19 +11,19 @@ Module = Object.assign(
     noInitialRun: true,
     noExitRuntime: false,
     FS: FS,
-    preRun: function() {
+    preRun: function () {
       FS.init(
         function input() {
           throw "should not happen";
         },
         function output(c) {
-          if (c) outBuffer.push(c)
+          if (c) outBuffer.push(c);
         },
         function error(c) {
-          if (c) errBuffer.push(c)
-        }
-      )
-    }
+          if (c) errBuffer.push(c);
+        },
+      );
+    },
   },
-  Module
-)
+  Module,
+);

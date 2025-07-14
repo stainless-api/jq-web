@@ -7,16 +7,32 @@ on:
   pull_request:
 
 jobs:
-    # As of this writing, Ubuntu’s emscripten doesn’t accommodate
-    # the Node.js bug described in
-    # https://github.com/emscripten-core/emscripten/issues/16913.
-    #
-    # So no Linux for now.
-    mac:
-        runs-on: macOS-latest
+    # Use Docker to build with Emscripten, avoiding the Node.js compatibility
+    # issue described in https://github.com/emscripten-core/emscripten/issues/16913
+    # by using a controlled Docker environment.
+    build-and-test:
+        runs-on: ubuntu-latest
         steps:
-        - run: node --version
-        - uses: actions/checkout@main
-        - run: brew install emscripten autoconf automake libtool
-        - run: npm install
-        - run: make test
+        - name: Checkout code
+          uses: actions/checkout@v4
+          with:
+            submodules: recursive
+        
+        - name: Set up Docker Buildx
+          uses: docker/setup-buildx-action@v3
+        
+        - name: Build with Docker
+          run: |
+            chmod +x docker-make.sh
+            ./docker-make.sh
+        
+        - name: Set up Node.js
+          uses: actions/setup-node@v4
+          with:
+            node-version: '20'
+        
+        - name: Install Node.js dependencies
+          run: npm install
+        
+        - name: Run tests
+          run: node ./test.js

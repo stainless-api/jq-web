@@ -1,21 +1,44 @@
 [![npm badge](https://img.shields.io/npm/v/jq-web.svg)](https://www.npmjs.com/package/jq-web) [![Mentioned in Awesome jq](https://awesome.re/mentioned-badge.svg)](https://github.com/fiatjaf/awesome-jq)
 
-# jq-web
+# jq-web (Cloudflare Workers Compatible Fork)
+
+This is a fork of [jq-web](https://github.com/fiatjaf/jq-web) that is compatible with Cloudflare Workers and other JavaScript environments.
 
 This is a WebAssembly build of [jq](https://github.com/jqlang/jq), the command-line JSON processor.
 
-It runs in the browser.
+It runs in the browser, Node.js, and Cloudflare Workers.
 
-### Installation and use
+## Why use this fork?
 
-```
+**Use this fork if you:**
+- Need to run jq in Cloudflare Workers
+- Want a simple, consistent API across all environments
+- Prefer static bundling over dynamic WASM loading
+- Are building libraries that need universal compatibility
+
+**Use the original jq-web if you:**
+- Only target browsers/Node.js (not Cloudflare Workers)
+- Want smaller bundle sizes (dynamic WASM loading)
+- Need the most memory-efficient option for Node.js servers
+
+## Key differences from original jq-web
+
+1. **Static WASM bundling** - The WASM file is imported at build time rather than fetched at runtime
+2. **Universal compatibility** - Works in Cloudflare Workers, which doesn't support dynamic WASM fetching
+3. **Emscripten web mode** - Built with `ENVIRONMENT="web"` for better compatibility
+4. **Simplified API** - One import works everywhere, no environment detection needed
+
+## Installation and use
+
+```bash
 npm install jq-web
 ```
 
 ```js
-var jq = require('jq-web');
+import initJq from 'jq-web';
 
-jq.then( jq => jq.json({
+const jq = await initJq();
+const output = jq.json({
   a: {
     big: {
       json: [
@@ -26,12 +49,10 @@ jq.then( jq => jq.json({
       ]
     }
   }
-}, '.a.big.json | ["empty", .[1], "useless", .[3]] | join(" ")')
+}, '.a.big.json | ["empty", .[1], "useless", .[3]] | join(" ")');
 ```
 
 The code above returns the string `"empty of useless things"`.
-
-You could do the same using the promised API with `jq.promised.json({...}).then(result => {})`. That is useful if you're loading a `.mem` or `.wasm` file, as the library won't return the correct results until these files are asynchronously fetched by the Emscripten runtime.
 
 ### Webpack issues
 
@@ -51,6 +72,14 @@ By default projects compiled with Emscripten look for `.wasm` files in the same 
 
 ## Build
 
+### Option 1: Using Docker (Recommended)
+```bash
+./docker-make.sh          # Builds everything (equivalent to 'make all')
+./docker-make.sh clean    # Cleans build artifacts
+./docker-make.sh test     # Runs tests
+```
+
+### Option 2: Local Build
 1. Install Emscripten. There have been several API changes over time; version 3.1.31
 is known to work.
 2. Clone this repository, and `cd` into it.

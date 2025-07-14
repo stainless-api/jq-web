@@ -2,10 +2,10 @@
 
 const tape = require('tape');
 
-const jqPromise = require('./jq.js');
+const initJq = require('./jq-node.js');
 
 tape('jq behavior', async function(t) {
-  doJQTests(t, await jqPromise);
+  doJQTests(t, await initJq());
 });
 
 /*

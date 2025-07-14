@@ -1,0 +1,83 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+      
+      - name: Build with Docker
+        run: |
+          chmod +x docker-make.sh
+          ./docker-make.sh
+      
+      - name: Verify build artifacts
+        run: |
+          if [ ! -f "jq.js" ]; then
+            echo "Error: jq.js not found"
+            exit 1
+          fi
+          if [ ! -f "jq.wasm" ]; then
+            echo "Error: jq.wasm not found"
+            exit 1
+          fi
+          echo "Build artifacts verified successfully"
+      
+      - name: Update package.json version
+        run: |
+          sed -i 's/"version": "[^"]*"/"version": "${{ steps.version.outputs.VERSION }}"/' package.json
+      
+      - name: Create release directory
+        run: |
+          mkdir -p release
+          cp package.json release/
+          cp jq.js release/
+          cp jq.wasm release/
+          cp static.js release/
+      
+      - name: Create tar.gz archive
+        run: |
+          cd release
+          tar -czf ../jq-web-${{ steps.version.outputs.VERSION }}.tar.gz .
+          cd ..
+          ls -la jq-web-${{ steps.version.outputs.VERSION }}.tar.gz
+      
+      - name: Create Release
+        uses: actions/create-release@v1
+        id: create_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: jq-web v${{ steps.version.outputs.VERSION }}
+          body: ${{ steps.release_notes.outputs.RELEASE_NOTES }}
+          draft: false
+          prerelease: false
+      
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./jq-web-${{ steps.version.outputs.VERSION }}.tar.gz
+          asset_name: jq-web-${{ steps.version.outputs.VERSION }}.tar.gz
+          asset_content_type: application/gzip

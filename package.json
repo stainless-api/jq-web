@@ -1,8 +1,22 @@
 {
   "name": "jq-web",
-  "version": "0.6.2",
-  "description": "a hack that makes jq run in the browser with emscripten.",
+  "version": "0.7.0",
+  "description": "WebAssembly build of jq with universal compatibility (Cloudflare Workers, Node.js, Browser)",
   "main": "jq.js",
+  "files": [
+    "jq.js",
+    "jq-cloudflare.js",
+    "jq-node.js",
+    "jq.wasm"
+  ],
+  "exports": {
+    ".": {
+      "workerd": "./jq-cloudflare.js",
+      "default": "./jq-node.js"
+    },
+    "./static": "./static.js",
+    "./jq.wasm": "./jq.wasm"
+  },
   "scripts": {
     "test": "make test"
   },
