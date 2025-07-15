@@ -1,16 +1,14 @@
 /** @format */
 
 // Import the WASM file statically
-import wasmModule from './jq.wasm';
+import wasmModule from "./jq.wasm";
 
-import jqFactory from './jq.js';
+import jqFactory from "./jq.js";
 
-export default function() {
-  return jqFactory({
-    instantiateWasm: (imports, callback) => {
-      const instance = new WebAssembly.Instance(wasmModule, imports);
-      callback(instance);
-      return instance.exports;
-    }
-  });
-}
+export default jqFactory({
+  instantiateWasm: (imports, callback) => {
+    const instance = new WebAssembly.Instance(wasmModule, imports);
+    callback(instance);
+    return instance.exports;
+  },
+});
