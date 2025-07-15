@@ -43,10 +43,6 @@ jobs:
           fi
           echo "Build artifacts verified successfully"
 
-      - name: Update package.json version
-        run: |
-          sed -i 's/"version": "[^"]*"/"version": "${{ steps.version.outputs.VERSION }}"/' package.json
-
       - name: Create release directory
         run: |
           mkdir -p release
