@@ -7,7 +7,7 @@ on:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     permissions:
       contents: write
 
@@ -17,25 +17,19 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Install dependencies
+        run: |
+          brew install emscripten autoconf automake libtool
+
+      - name: Install npm packages
+        run: npm install
 
       - name: Extract version from tag
         id: version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
-      - name: Build with Docker cache
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          tags: jq-emscripten
-          load: true
-
-      - name: Run make in Docker
-        run: docker run --rm -v "$(pwd):/src" -w /src jq-emscripten make all
+      - name: Build project
+        run: make all
 
       - name: Verify build artifacts
         run: |
@@ -65,9 +59,9 @@ jobs:
       - name: Create tar.gz archive
         run: |
           cd release
-          tar -czf ../jq-web-${{ steps.version.outputs.VERSION }}.tar.gz .
+          tar -czf ../jq-web.tar.gz .
           cd ..
-          ls -la jq-web-${{ steps.version.outputs.VERSION }}.tar.gz
+          ls -la jq-web.tar.gz
 
       - name: Create Release
         uses: actions/create-release@v1
@@ -87,6 +81,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./jq-web-${{ steps.version.outputs.VERSION }}.tar.gz
-          asset_name: jq-web-${{ steps.version.outputs.VERSION }}.tar.gz
+          asset_path: ./jq-web.tar.gz
+          asset_name: jq-web.tar.gz
           asset_content_type: application/gzip

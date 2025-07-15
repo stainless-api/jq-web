@@ -7,32 +7,17 @@ on:
   pull_request:
 
 jobs:
-    # Use Docker to build with Emscripten, avoiding the Node.js compatibility
-    # issue described in https://github.com/emscripten-core/emscripten/issues/16913
-    # by using a controlled Docker environment.
     build-and-test:
-        runs-on: ubuntu-latest
+        runs-on: macos-latest
         steps:
         - name: Checkout code
           uses: actions/checkout@v4
           with:
             submodules: recursive
         
-        - name: Set up Docker Buildx
-          uses: docker/setup-buildx-action@v3
-        
-        - name: Build with Docker cache
-          uses: docker/build-push-action@v5
-          with:
-            context: .
-            file: ./Dockerfile
-            cache-from: type=gha
-            cache-to: type=gha,mode=max
-            tags: jq-emscripten
-            load: true
-        
-        - name: Run make in Docker
-          run: docker run --rm -v "$(pwd):/src" -w /src jq-emscripten make all
+        - name: Install dependencies
+          run: |
+            brew install emscripten autoconf automake libtool
         
         - name: Set up Node.js
           uses: actions/setup-node@v4
@@ -41,6 +26,9 @@ jobs:
         
         - name: Install Node.js dependencies
           run: npm install
+        
+        - name: Build project
+          run: make all
         
         - name: Run tests
           run: node ./test.js
