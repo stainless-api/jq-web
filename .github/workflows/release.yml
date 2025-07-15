@@ -3,32 +3,40 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 jobs:
   release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           submodules: recursive
-      
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      
+
       - name: Extract version from tag
         id: version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-      
-      - name: Build with Docker
-        run: |
-          chmod +x docker-make.sh
-          ./docker-make.sh
-      
+
+      - name: Build with Docker cache
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: jq-emscripten
+          load: true
+
+      - name: Run make in Docker
+        run: docker run --rm -v "$(pwd):/src" -w /src jq-emscripten make all
+
       - name: Verify build artifacts
         run: |
           if [ ! -f "jq.js" ]; then
@@ -40,26 +48,27 @@ jobs:
             exit 1
           fi
           echo "Build artifacts verified successfully"
-      
+
       - name: Update package.json version
         run: |
           sed -i 's/"version": "[^"]*"/"version": "${{ steps.version.outputs.VERSION }}"/' package.json
-      
+
       - name: Create release directory
         run: |
           mkdir -p release
           cp package.json release/
           cp jq.js release/
           cp jq.wasm release/
-          cp static.js release/
-      
+          cp jq-cloudflare.js release/
+          cp jq-node.js release/
+
       - name: Create tar.gz archive
         run: |
           cd release
           tar -czf ../jq-web-${{ steps.version.outputs.VERSION }}.tar.gz .
           cd ..
           ls -la jq-web-${{ steps.version.outputs.VERSION }}.tar.gz
-      
+
       - name: Create Release
         uses: actions/create-release@v1
         id: create_release
@@ -71,7 +80,7 @@ jobs:
           body: ${{ steps.release_notes.outputs.RELEASE_NOTES }}
           draft: false
           prerelease: false
-      
+
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
