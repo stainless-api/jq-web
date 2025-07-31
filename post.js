@@ -110,7 +110,7 @@ function raw(jsonstring, filter, flags) {
     throw e;
   }
 
-  return stdout;
+  return stdout ?? '';
 }
 
 // takes an object as input and tries to return objects.
