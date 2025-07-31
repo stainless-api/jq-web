@@ -3,7 +3,20 @@
 const fs = require("fs");
 const path = require("path");
 
-const wasmFile = fs.readFileSync(path.join(__dirname, "jq.wasm"));
+const { url } = require("./jq-wasm.url.mjs")
+let wasmPath = path.join(__dirname, "jq.wasm");
+const nextBuildPath = wasmPath.match(/^.+[\\\/]\.next[\\\/]server[\\\/]/)?.[0];
+if (nextBuildPath) {
+  const suffix = url.pathname.startsWith('/_next/') ? url.pathname.slice('/_next/'.length) : url.pathname
+  const chunkedWasmPath = path.join(nextBuildPath, 'chunks', suffix)
+  if (fs.existsSync(chunkedWasmPath)) {
+    wasmPath = chunkedWasmPath;
+  } else {
+    wasmPath = path.join(nextBuildPath, suffix)
+  }
+}
+
+const wasmFile = fs.readFileSync(wasmPath);
 
 const jqFactory = require("./jq.js");
 
