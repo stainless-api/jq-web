@@ -1,13 +1,14 @@
 {
   "name": "jq-web",
-  "version": "0.8.3",
+  "version": "0.8.4",
   "description": "WebAssembly build of jq with universal compatibility (Cloudflare Workers, Node.js, Browser)",
   "main": "jq.js",
   "files": [
     "jq.js",
     "jq-cloudflare.js",
     "jq-node.js",
-    "jq.wasm"
+    "jq.wasm",
+    "jq-wasm.url.mjs"
   ],
   "exports": {
     ".": {
