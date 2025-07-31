@@ -1,6 +1,6 @@
 {
   "name": "jq-web",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "WebAssembly build of jq with universal compatibility (Cloudflare Workers, Node.js, Browser)",
   "main": "jq.js",
   "files": [
