@@ -51,6 +51,7 @@ jobs:
           cp jq.wasm release/
           cp jq-cloudflare.js release/
           cp jq-node.js release/
+          cp jq-wasm.url.mjs release/
 
       - name: Create tar.gz archive
         run: |
