@@ -3,18 +3,23 @@
 const fs = require("fs");
 const path = require("path");
 
-const { url } = require("./jq-wasm.url.mjs")
+let metaURL = undefined;
+try {
+  const { url } = require("./jq-wasm.url.mjs")
+  metaURL = url;
+} catch {}
+
 let wasmPath = path.join(__dirname, "jq.wasm");
 
 // If running in NextJS, we need to find the actual place that the jq.wasm is stored in static files.
 const nextJSBuildPath = wasmPath.match(/^.+[\\\/]\.next[\\\/]server[\\\/]/)?.[0];
-if (nextJSBuildPath) {
-  const suffix = url.pathname.startsWith('/_next/') ? url.pathname.slice('/_next/'.length) : url.pathname
-  const chunkedWasmPath = path.join(nextJSBuildPath, 'chunks', suffix)
+if (nextJSBuildPath && metaURL !== undefined) {
+  const suffix = metaURL.pathname.startsWith('/_next/') ? metaURL.pathname.slice('/_next/'.length) : metaURL.pathname;
+  const chunkedWasmPath = path.join(nextJSBuildPath, 'chunks', suffix);
   if (fs.existsSync(chunkedWasmPath)) {
     wasmPath = chunkedWasmPath;
   } else {
-    wasmPath = path.join(nextJSBuildPath, suffix)
+    wasmPath = path.join(nextJSBuildPath, suffix);
   }
 }
 
