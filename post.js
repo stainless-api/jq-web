@@ -127,8 +127,10 @@ function json(json, filter) {
       .reduce(function(acc, line) {
         return acc.concat(JSON.parse(line))
       }, [])
-  } else {
+  } else if (result !== '') {
     return JSON.parse(result)
+  } else {
+    return []
   }
 }
 
